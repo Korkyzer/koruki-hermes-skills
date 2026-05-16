@@ -1,0 +1,35 @@
+# Koruki Hermes Skills
+
+Shared Hermes skills used by Koruki / Asa Studio.
+
+## Install as a Hermes tap
+
+```bash
+hermes skills tap add Korkyzer/koruki-hermes-skills
+hermes skills search freefrontend
+hermes skills install Korkyzer/koruki-hermes-skills/skills/freefrontend-pattern-bank
+```
+
+## Included skills
+
+- `freefrontend-pattern-bank` — local searchable FreeFrontend pattern bank with CodePen source inspection helpers.
+
+## Repo layout
+
+Hermes taps currently scan the immediate directories under `skills/`, so each skill lives at:
+
+```text
+skills/<skill-name>/SKILL.md
+```
+
+Supporting files stay inside the skill directory under `scripts/`, `references/`, `templates/`, or `assets/`.
+
+## Update the FreeFrontend index
+
+After installing/loading the skill, rebuild locally with:
+
+```bash
+python ~/.hermes/skills/freefrontend-pattern-bank/scripts/build_freefrontend_index.py --out ~/.hermes/skills/freefrontend-pattern-bank/references/freefrontend-index-v1.json
+```
+
+If installed under a category/path, adjust the path accordingly.
