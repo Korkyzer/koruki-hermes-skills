@@ -10,6 +10,13 @@ WEIGHTS = {
     "description": 5,
     "tags": 8,
     "libraries": 9,
+    "mechanics": 11,
+    "materials": 10,
+    "structures": 7,
+    "vibes": 6,
+    "code_features": 8,
+    "search_terms": 6,
+    "visual": 7,
     "category": 4,
     "source": 3,
     "url": 2,
@@ -73,8 +80,12 @@ def main():
     for i, item in enumerate(results, 1):
         libs = ", ".join(item.get("libraries") or []) or "-"
         tags = ", ".join(item.get("tags") or []) or "-"
+        mech = ", ".join(item.get("mechanics") or []) or "-"
+        mat = ", ".join(item.get("materials") or []) or "-"
         print(f"{i}. [{item['score']}] {item.get('title')}")
-        print(f"   source: {item.get('source')} / {item.get('kind')} | libs: {libs} | tags: {tags}")
+        print(f"   source: {item.get('source')} / {item.get('kind')} | libs: {libs}")
+        print(f"   mechanics: {mech} | materials: {mat}")
+        print(f"   tags: {tags}")
         print(f"   url: {item.get('url')}")
         srcs = item.get("sources") or {}
         if srcs:

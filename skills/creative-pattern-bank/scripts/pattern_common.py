@@ -197,7 +197,7 @@ def page_record(source: str, url: str, raw: str, status: int, ctype: str, catego
     sources = extract_source_links(raw)
     text_blob = " ".join([meta.get("og_title") or meta.get("title") or "", meta.get("og_description") or meta.get("description") or "", " ".join(img.get("alt", "") for img in images), " ".join(links[:80]), raw[:4000]])
     br = blocked_reason(status, raw)
-    return {
+    row = {
         "source": source,
         "kind": kind,
         "url": url,
@@ -216,6 +216,7 @@ def page_record(source: str, url: str, raw: str, status: int, ctype: str, catego
         "sources": sources,
         "links": links[:120],
     }
+    return enrich_record(row, raw)
 
 
 def json_dump(obj: Any, path: str) -> None:
@@ -234,3 +235,118 @@ def tokenize(q: str) -> List[str]:
 
 def utc_now() -> str:
     return dt.datetime.utcnow().isoformat(timespec="seconds") + "Z"
+
+
+# V2 semantic enrichment: this compensates for low-description sources like
+# UIverse, CodePen, Awwwards, Dribbble, etc. by inferring our own searchable
+# vocabulary from titles, URLs, code-ish text, image alt text, and optional
+# vision captions merged later.
+TAXONOMY = {
+    "mechanics": {
+        "scroll-reveal": ["scroll", "scrolltrigger", "onscroll", "intersectionobserver", "reveal on scroll"],
+        "mask-reveal": ["mask", "clip-path", "clippath", "overflow hidden", "wipe", "reveal"],
+        "curtain": ["curtain", "drape", "opening", "closing", "veil"],
+        "blinds": ["blind", "blinds", "slats", "stripes", "horizontal", "venetian"],
+        "shutter": ["shutter", "rollup", "roll-up", "garage door", "storefront", "gate", "grille"],
+        "fold": ["fold", "folding", "accordion", "crease", "origami"],
+        "parallax": ["parallax", "depth", "layered", "translatez"],
+        "drag": ["drag", "draggable", "pointermove", "mouse move", "gesture"],
+        "hover-microinteraction": ["hover", ":hover", "mouseenter", "mouseleave"],
+        "page-transition": ["page transition", "barba", "swup", "transition"],
+        "text-split": ["splittext", "split type", "letter", "chars", "words"],
+        "physics": ["physics", "matter", "spring", "inertia", "velocity"],
+        "shader-distortion": ["shader", "glsl", "distortion", "displacement", "webgl"],
+    },
+    "materials": {
+        "metal": ["metal", "metallic", "steel", "chrome", "corrugated", "ribbed", "aluminium", "aluminum"],
+        "paper": ["paper", "poster", "print", "grain", "folded paper"],
+        "glass": ["glass", "frosted", "blur", "translucent", "backdrop-filter"],
+        "cloth": ["cloth", "fabric", "silk", "canvas texture", "drape"],
+        "neon-light": ["neon", "glow", "emissive", "light trail"],
+        "liquid": ["liquid", "fluid", "gooey", "blob", "metaball"],
+        "plastic": ["plastic", "rubber", "toy", "3d button"],
+    },
+    "structures": {
+        "hero": ["hero", "landing", "intro", "header"],
+        "grid": ["grid", "masonry", "gallery", "tiles"],
+        "panel": ["panel", "section", "slide", "drawer"],
+        "card": ["card", "pricing", "profile", "product card"],
+        "navigation": ["nav", "menu", "navigation", "hamburger"],
+        "loader": ["loader", "loading", "preloader", "spinner"],
+        "button": ["button", "cta", "submit"],
+        "form": ["input", "form", "checkbox", "toggle", "radio"],
+    },
+    "vibes": {
+        "industrial": ["industrial", "metal", "grunge", "garage", "warehouse", "shutter", "corrugated"],
+        "brutalist": ["brutalist", "raw", "bold", "poster", "mono", "black"],
+        "editorial": ["editorial", "magazine", "typography", "serif", "layout"],
+        "luxury": ["luxury", "premium", "elegant", "gold", "minimal"],
+        "retro": ["retro", "vintage", "y2k", "90s", "2000", "crt"],
+        "cyber": ["cyber", "terminal", "matrix", "hacker", "glitch"],
+        "playful": ["playful", "cute", "toy", "cartoon", "bouncy"],
+    },
+    "code_features": {
+        "css-transform": ["transform", "translate", "scale", "rotate", "matrix3d"],
+        "css-mask-clip": ["clip-path", "mask-image", "mask", "overflow: hidden"],
+        "css-grid": ["display:grid", "display: grid", "grid-template"],
+        "css-filter": ["filter:", "backdrop-filter", "blur(", "drop-shadow"],
+        "svg-path": ["<svg", "path", "viewbox", "stroke-dasharray", "strokedasharray"],
+        "canvas-webgl": ["<canvas", "webgl", "getcontext", "glsl", "shader"],
+        "scroll-api": ["scrolltrigger", "intersectionobserver", "scrolltimeline", "onscroll"],
+        "pointer-api": ["pointermove", "mousemove", "touchmove", "drag"],
+        "animation-timeline": ["@keyframes", "animation:", "transition:", "timeline", "tween"],
+    },
+}
+
+LOW_METADATA_SOURCES = {"uiverse", "codepen", "dribbble", "behance", "awwwards", "siteinspire", "land-book", "one-page-love", "godly"}
+
+
+def infer_values(text: str, bucket: str) -> List[str]:
+    low = (text or "").lower().replace("_", " ").replace("-", " ")
+    found = []
+    for label, needles in TAXONOMY.get(bucket, {}).items():
+        for needle in needles:
+            if needle.lower().replace("-", " ") in low:
+                found.append(label)
+                break
+    return sorted(set(found))
+
+
+def description_quality(row: Dict[str, Any]) -> str:
+    desc = clean_text(str(row.get("description") or ""))
+    title = clean_text(str(row.get("title") or ""))
+    if not desc:
+        return "missing"
+    if len(desc) < 45 or desc.lower() in title.lower() or title.lower() in desc.lower():
+        return "thin"
+    return "usable"
+
+
+def enrich_record(row: Dict[str, Any], raw: str = "") -> Dict[str, Any]:
+    """Add self-authored search metadata without relying on source descriptions."""
+    visual = row.get("visual") or {}
+    caption = " ".join(str(visual.get(k, "")) for k in ("caption", "notes", "palette", "composition"))
+    text = " ".join([
+        str(row.get("source") or ""), str(row.get("kind") or ""), str(row.get("url") or ""),
+        str(row.get("title") or ""), str(row.get("description") or ""), str(row.get("category") or ""),
+        " ".join(row.get("tags") or []), " ".join(row.get("libraries") or []),
+        " ".join(row.get("image_alts") or []), caption, raw[:8000],
+    ])
+    row["description_quality"] = description_quality(row)
+    row["mechanics"] = sorted(set(row.get("mechanics") or []) | set(infer_values(text, "mechanics")))
+    row["materials"] = sorted(set(row.get("materials") or []) | set(infer_values(text, "materials")))
+    row["structures"] = sorted(set(row.get("structures") or []) | set(infer_values(text, "structures")))
+    row["vibes"] = sorted(set(row.get("vibes") or []) | set(infer_values(text, "vibes")))
+    row["code_features"] = sorted(set(row.get("code_features") or []) | set(infer_values(text, "code_features")))
+    # Promote inferred mechanics/structures into broad tags for backward-compatible search.
+    promoted = set(row.get("tags") or []) | set(row["mechanics"]) | set(row["structures"])
+    row["tags"] = sorted(promoted)
+    row["needs_visual_caption"] = (
+        row.get("source") in LOW_METADATA_SOURCES
+        or row["description_quality"] in ("missing", "thin")
+    ) and not visual.get("caption")
+    row["search_terms"] = sorted(set(
+        list(row.get("tags") or []) + list(row.get("libraries") or []) +
+        row["mechanics"] + row["materials"] + row["structures"] + row["vibes"] + row["code_features"]
+    ))
+    return row

@@ -10,7 +10,7 @@ import time
 from typing import Dict, Iterable, List
 
 from pattern_common import (
-    absolutize, clean_text, detect_libraries, detect_tags, extract_links,
+    absolutize, clean_text, detect_libraries, detect_tags, enrich_record, extract_links,
     extract_source_links, fetch_url, json_dump, page_record, parse_sitemap,
     slug_title_from_url, utc_now
 )
@@ -224,7 +224,8 @@ def build(sources: List[str], max_pages: int, per_source: int, delay: float, hin
         except Exception as exc:
             print(f"[{source}] failed: {exc}", file=sys.stderr)
     pages = dedupe(pages, key="url")
-    return {"schema": "creative-pattern-bank/v1", "generated_at": utc_now(), "sources": sources, "query_hints": hints, "total_count": len(pages), "pages": pages}
+    pages = [enrich_record(p) for p in pages]
+    return {"schema": "creative-pattern-bank/v2", "generated_at": utc_now(), "sources": sources, "query_hints": hints, "total_count": len(pages), "pages": pages}
 
 
 def main() -> None:

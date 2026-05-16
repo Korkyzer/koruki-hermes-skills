@@ -35,7 +35,11 @@ def main():
                 for v in vals[:2]: flat.append(f"{k}: {v}")
             print(f"- Source/code: {' | '.join(flat[:4])}")
         print(f"- Libraries: {', '.join(r.get('libraries') or []) or 'unknown / CSS'}")
+        print(f"- Mechanics: {', '.join(r.get('mechanics') or []) or '-'}")
+        print(f"- Materials/vibe: {', '.join((r.get('materials') or []) + (r.get('vibes') or [])) or '-'}")
         print(f"- Tags: {', '.join(r.get('tags') or []) or '-'}")
+        if r.get('needs_visual_caption'):
+            print("- Index caveat: low-description source; screenshot/vision caption would improve matching.")
         if r.get('description'):
             print(f"- Why useful: {r.get('description')[:240]}")
         if r.get('blocked'):
