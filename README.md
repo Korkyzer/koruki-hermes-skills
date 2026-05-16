@@ -6,7 +6,13 @@ Shared Hermes skills used by Koruki / Asa Studio.
 
 ```bash
 hermes skills tap add Korkyzer/koruki-hermes-skills
-hermes skills inspect Korkyzer/koruki-hermes-skills/skills/freefrontend-pattern-bank
+hermes skills inspect Korkyzer/koruki-hermes-skills/skills/creative-pattern-bank
+hermes skills install Korkyzer/koruki-hermes-skills/skills/creative-pattern-bank
+```
+
+Legacy FreeFrontend-only skill:
+
+```bash
 hermes skills install Korkyzer/koruki-hermes-skills/skills/freefrontend-pattern-bank
 ```
 
@@ -14,7 +20,8 @@ Note: on the current Hermes build, direct `inspect`/`install` works reliably for
 
 ## Included skills
 
-- `freefrontend-pattern-bank` — local searchable FreeFrontend pattern bank with CodePen source inspection helpers.
+- `creative-pattern-bank` — multi-source creative frontend pattern bank: FreeFrontend, CodeMyUI, DevSnap, Codrops, GSAPify, Uiverse seeds, CodePen/GitHub source inspection.
+- `freefrontend-pattern-bank` — legacy FreeFrontend-only pattern bank with CodePen source inspection helpers.
 
 ## Repo layout
 
