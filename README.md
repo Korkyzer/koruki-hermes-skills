@@ -6,9 +6,11 @@ Shared Hermes skills used by Koruki / Asa Studio.
 
 ```bash
 hermes skills tap add Korkyzer/koruki-hermes-skills
-hermes skills search freefrontend
+hermes skills inspect Korkyzer/koruki-hermes-skills/skills/freefrontend-pattern-bank
 hermes skills install Korkyzer/koruki-hermes-skills/skills/freefrontend-pattern-bank
 ```
+
+Note: on the current Hermes build, direct `inspect`/`install` works reliably for custom taps; `skills search` may not surface custom tap results yet.
 
 ## Included skills
 
