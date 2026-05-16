@@ -25,6 +25,8 @@ Record fields:
 - `needs_visual_caption`: true when the record should be enriched with screenshot/vision caption
 - `search_terms`: merged searchable terms from tags/libraries/V2 taxonomy
 - `visual`: optional dict from external screenshot/vision captioning (`caption`, `palette`, `composition`, `notes`)
+- `stats` / `popularity`: optional dict for extracted popularity (`views`, `likes`, `favorites`, `forks`, `stars`); search ranking uses a log-scale bonus so popularity helps but does not dominate relevance
+- `score_parts`: output-only dict from `search_patterns.py` containing `relevance`, `quality`, `popularity`, `mode_bonus`, and `penalty`
 - `image`, `image_alts`
 - `sources`: dict of source links, e.g. `{ "codepen": [...], "github": [...] }`
 - `parent_url`, `author`, `license`, `rank_hint` optional

@@ -18,11 +18,18 @@ Use this skill to find and adapt frontend interaction patterns across multiple c
    python3 scripts/build_pattern_index.py --query-hints "metal shutter scroll gsap blinds" --max-pages 80 --out /tmp/creative-patterns.json
    ```
 
-2. Search the index:
+2. Search/rank the index:
    ```bash
    python3 scripts/search_patterns.py /tmp/creative-patterns.json "metal shutter scroll reveal gsap" --limit 12
    ```
    Search now uses self-authored V2 fields (`mechanics`, `materials`, `structures`, `vibes`, `code_features`) so it still works when the source has weak descriptions.
+
+   Use ranking modes when Arthur wants the best options first:
+   ```bash
+   python3 scripts/search_patterns.py /tmp/creative-patterns.json "toggle switch slider" --rank-mode premium --limit 12
+   python3 scripts/search_patterns.py /tmp/creative-patterns.json "toggle switch slider" --show-buckets --limit 5
+   ```
+   Modes: `relevant`, `premium`, `weird`, `production`, `motion`. The hybrid rank combines relevance, source trust, code/source availability, description quality, optional popularity stats, and mode-specific bonuses.
 
 3. For low-metadata visual sources, merge screenshot/vision captions when available:
    ```bash
@@ -62,7 +69,7 @@ For sources like UIverse/CodePen where titles/descriptions are weak, every recor
 - `vibes`: design direction (`industrial`, `brutalist`, `editorial`, `luxury`, `retro`, etc.)
 - `code_features`: implementation clues (`css-mask-clip`, `svg-path`, `canvas-webgl`, `scroll-api`, etc.)
 
-If `needs_visual_caption: true`, grab/describe a screenshot externally and merge captions with `enrich_pattern_index.py`.
+If `needs_visual_caption: true`, treat native metadata as insufficient: grab/describe a screenshot externally and merge captions with `enrich_pattern_index.py`. For UIverse/CodePen-style sources, do not rely on source descriptions alone; search must combine mechanism + material + structure + tech (e.g. `shutter metal hero scroll gsap`) and use the V2 inferred fields first.
 
 ## Practical notes
 
