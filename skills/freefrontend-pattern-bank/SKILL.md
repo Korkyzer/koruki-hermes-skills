@@ -9,24 +9,24 @@ Use this skill to turn FreeFrontend from a browsing site into an agent-usable pa
 
 ## Core workflow
 
-1. **Use the bundled V1 index first** unless freshness matters:
-   ```bash
-   python3 scripts/search_freefrontend.py references/freefrontend-index-v1.json "gsap scroll blinds shutter" --limit 12
-   ```
-   Current bundled index: ~2k records from 80 FreeFrontend listing pages, including individual snippet cards.
-
-2. **Build/update the index** when you need fresher or broader coverage:
-   ```bash
-   python3 scripts/build_freefrontend_index.py --max-pages 250 --out /tmp/freefrontend-patterns.json
-   ```
-   For a faster pass:
+1. **Build/update the local index first**. Tap installs intentionally do **not** bundle the full JSON index because Hermes Hub blocks oversized community skills.
    ```bash
    python3 scripts/build_freefrontend_index.py --max-pages 80 --out /tmp/freefrontend-patterns.json
    ```
+   For broader/fresher coverage:
+   ```bash
+   python3 scripts/build_freefrontend_index.py --max-pages 250 --out /tmp/freefrontend-patterns.json
+   ```
 
-3. **Search a custom index**:
+2. **Search the index**:
    ```bash
    python3 scripts/search_freefrontend.py /tmp/freefrontend-patterns.json "gsap scroll blinds shutter" --limit 12
+   ```
+   If your local checkout includes `references/freefrontend-index-v1.json`, you can use that prebuilt index directly.
+
+3. **Search a bundled local index when available**:
+   ```bash
+   python3 scripts/search_freefrontend.py references/freefrontend-index-v1.json "gsap scroll blinds shutter" --limit 12
    ```
 
 4. **Inspect one result/source**:

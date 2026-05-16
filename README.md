@@ -26,10 +26,16 @@ Supporting files stay inside the skill directory under `scripts/`, `references/`
 
 ## Update the FreeFrontend index
 
-After installing/loading the skill, rebuild locally with:
+The full prebuilt FreeFrontend JSON index is intentionally not committed here: Hermes Hub security scan blocks oversized community skills. After installing/loading the skill, rebuild locally with:
 
 ```bash
-python ~/.hermes/skills/freefrontend-pattern-bank/scripts/build_freefrontend_index.py --out ~/.hermes/skills/freefrontend-pattern-bank/references/freefrontend-index-v1.json
+python ~/.hermes/skills/freefrontend-pattern-bank/scripts/build_freefrontend_index.py --max-pages 80 --out /tmp/freefrontend-patterns.json
+```
+
+Then search it:
+
+```bash
+python ~/.hermes/skills/freefrontend-pattern-bank/scripts/search_freefrontend.py /tmp/freefrontend-patterns.json "metal shutter scroll reveal"
 ```
 
 If installed under a category/path, adjust the path accordingly.
