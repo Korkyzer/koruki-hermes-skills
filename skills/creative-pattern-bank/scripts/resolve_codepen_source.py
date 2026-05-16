@@ -14,7 +14,7 @@ import urllib.parse
 from pathlib import Path
 from typing import Dict, List
 
-from ff_common import blocked_reason, clean_text, fetch_url, json_dump
+from pattern_common import blocked_reason, clean_text, fetch_url, json_dump
 
 
 def parse_codepen_url(url: str) -> tuple[str, str]:

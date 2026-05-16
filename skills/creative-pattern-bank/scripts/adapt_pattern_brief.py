@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
 """Generate an implementation/adaptation brief from top pattern matches."""
 from __future__ import annotations
-import argparse, json, subprocess, sys
-from pathlib import Path
-
-
-def run_search(index: str, query: str, limit: int) -> list:
-    script = Path(__file__).with_name("search_patterns.py")
-    p = subprocess.run([sys.executable, str(script), index, query, "--limit", str(limit), "--json"], text=True, capture_output=True, check=True)
-    return json.loads(p.stdout)
+import argparse
+from search_patterns import score
+from pattern_common import load_index, tokenize
 
 
 def main():
@@ -18,7 +13,15 @@ def main():
     ap.add_argument("--project", default="frontend prototype")
     ap.add_argument("--limit", type=int, default=6)
     args = ap.parse_args()
-    rows = run_search(args.index, args.query, args.limit)
+    idx = load_index(args.index)
+    terms = tokenize(args.query)
+    ranked = []
+    for row in idx.get("pages", []):
+        s = score(row, terms)
+        if s > 0:
+            ranked.append((s, row))
+    ranked.sort(key=lambda x: x[0], reverse=True)
+    rows = [{"score": s, **row} for s, row in ranked[:args.limit]]
     print(f"# Adaptation brief: {args.project}")
     print(f"\nQuery: `{args.query}`\n")
     print("## Relevant references")

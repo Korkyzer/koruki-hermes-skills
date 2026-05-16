@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Inspect a pattern/source URL and resolve CodePen when possible."""
 from __future__ import annotations
-import argparse, json, os, re, subprocess, sys
+import argparse, json
 from pathlib import Path
 from pattern_common import extract_links, extract_meta, extract_source_links, fetch_url, page_record
 
@@ -9,15 +9,12 @@ from pattern_common import extract_links, extract_meta, extract_source_links, fe
 def try_codepen(url: str, outdir: str = "") -> dict:
     if "codepen.io" not in url:
         return {}
-    script = Path(__file__).with_name("resolve_codepen_source.py")
-    if not script.exists():
-        return {"codepen_resolver": "missing"}
-    cmd = [sys.executable, str(script), url]
-    if outdir:
-        cmd += ["--outdir", outdir]
     try:
-        p = subprocess.run(cmd, text=True, capture_output=True, timeout=45)
-        return {"codepen_resolver_exit": p.returncode, "codepen_resolver_stdout": p.stdout[-4000:], "codepen_resolver_stderr": p.stderr[-2000:]}
+        from resolve_codepen_source import resolve, write_outputs
+        result = resolve(url)
+        if outdir:
+            result["written"] = write_outputs(result, outdir)
+        return {"codepen_resolved": result}
     except Exception as exc:
         return {"codepen_resolver_error": str(exc)}
 
@@ -46,7 +43,7 @@ def main():
     print("sources:", json.dumps(extra['source_links'], ensure_ascii=False))
     if cp:
         print("codepen resolver:")
-        print(cp.get("codepen_resolver_stdout") or cp)
+        print(json.dumps(cp.get("codepen_resolved") or cp, ensure_ascii=False, indent=2)[:4000])
 
 if __name__ == "__main__":
     main()
